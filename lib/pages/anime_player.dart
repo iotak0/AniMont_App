@@ -737,7 +737,8 @@ class _AnimePlayerState extends State<AnimePlayer> {
                                               });
                                               print('progress $progress');
                                             },
-                                           ),
+                                            initialUrl: ifram,)
+                                            
                                       )),
                               Positioned(
                                 child: isFullScrean == true
