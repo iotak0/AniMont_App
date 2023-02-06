@@ -738,8 +738,8 @@ class _AnimePlayerState extends State<AnimePlayer> {
                                               print('progress $progress');
                                             },
                                             initialUrl: ifram,
-                                            javascriptMode:
-                                                JavascriptMode.unrestricted),
+                                           // javascriptMode:
+                                              //  JavascriptMode.unrestricted),
                                       )),
                               Positioned(
                                 child: isFullScrean == true
