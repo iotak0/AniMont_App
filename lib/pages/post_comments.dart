@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:chewie/chewie.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:linkfy_text/linkfy_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -67,6 +68,9 @@ class PostCommentsState extends State<PostComments> {
   }
 
   addComment() async {
+    try {
+      addAnime();
+    } catch (e) {}
     refresh();
     var response = await _server.postRequest(addComment_link, {
       "comment_anime": '${widget.animeId}',
@@ -923,12 +927,20 @@ class PostCommentsState extends State<PostComments> {
                                                                                             ),
                                                                                           ),
                                                                                         ))
-                                                                                    : Text(
+                                                                                    : LinkifyText(
                                                                                         comments[index].commentCont,
-                                                                                        style: TextStyle(
+                                                                                        textStyle: TextStyle(
                                                                                           color: primaryColor,
                                                                                           fontSize: 15,
                                                                                         ),
+                                                                                        linkStyle: TextStyle(
+                                                                                          color: bottomDown,
+                                                                                          fontSize: 15,
+                                                                                        ),
+                                                                                        linkTypes: [
+                                                                                          LinkType.userTag,
+                                                                                          LinkType.hashTag
+                                                                                        ],
                                                                                       ),
                                                                               ),
                                                                             ),
@@ -1336,11 +1348,17 @@ class PostCommentsState extends State<PostComments> {
                                                                                                             ],
                                                                                                           ),
                                                                                                           comments[index].replies.last.fair == false
-                                                                                                              ? Text(
+                                                                                                              ? LinkifyText(
                                                                                                                   comments[index].replies.last.commentCont,
-                                                                                                                  textAlign: TextAlign.left,
-                                                                                                                  style: TextStyle(fontSize: 15, color: primaryColor),
-                                                                                                                  // overflow: e.fullText == true ? TextOverflow.ellipsis : TextOverflow.visible,
+                                                                                                                  textStyle: TextStyle(
+                                                                                                                    color: primaryColor,
+                                                                                                                    fontSize: 15,
+                                                                                                                  ),
+                                                                                                                  linkStyle: TextStyle(
+                                                                                                                    color: bottomDown,
+                                                                                                                    fontSize: 15,
+                                                                                                                  ),
+                                                                                                                  linkTypes: [LinkType.userTag, LinkType.hashTag],
                                                                                                                 )
                                                                                                               : GestureDetector(
                                                                                                                   onDoubleTap: () {
@@ -1643,11 +1661,17 @@ class PostCommentsState extends State<PostComments> {
                                                                                                             ],
                                                                                                           ),
                                                                                                           e.fair == false
-                                                                                                              ? Text(
+                                                                                                              ? LinkifyText(
                                                                                                                   e.commentCont,
-                                                                                                                  textAlign: TextAlign.left,
-                                                                                                                  style: TextStyle(fontSize: 15, color: primaryColor),
-                                                                                                                  // overflow: e.fullText == true ? TextOverflow.ellipsis : TextOverflow.visible,
+                                                                                                                  textStyle: TextStyle(
+                                                                                                                    color: primaryColor,
+                                                                                                                    fontSize: 15,
+                                                                                                                  ),
+                                                                                                                  linkStyle: TextStyle(
+                                                                                                                    color: bottomDown,
+                                                                                                                    fontSize: 15,
+                                                                                                                  ),
+                                                                                                                  linkTypes: [LinkType.userTag, LinkType.hashTag],
                                                                                                                 )
                                                                                                               : GestureDetector(
                                                                                                                   onDoubleTap: () {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:email_auth/email_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_locales/flutter_locales.dart';
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../provider/user_model.dart';
 import '../../server/server_php.dart';
 import '../../server/urls_php.dart';
+import '../../widget/cust_snak_bar.dart';
 
 class CheckEmail extends StatefulWidget {
   final TextEditingController emailController;
@@ -63,6 +65,15 @@ class _CheckEmailState extends State<CheckEmail> {
     if (body['status'] == 'true') {
       loadingRe = false;
       setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: CustSnackBar(
+          headLine: 'OTP',
+          erorr: "OTP code has been sent",
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ));
     } else {
       loadingRe = false;
       setState(() {});
@@ -98,8 +109,15 @@ class _CheckEmailState extends State<CheckEmail> {
       //setState(() {});
       loadingCheck = false;
       setState(() {});
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: CustSnackBar()));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: CustSnackBar(
+          headLine: "OTP",
+          erorr: "OTP code incorrect",
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ));
       print('Fail');
     }
     loadingCheck = false;
@@ -132,8 +150,15 @@ class _CheckEmailState extends State<CheckEmail> {
       return true;
     } else {
       //Navigator.pop(context);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: CustSnackBar()));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: CustSnackBar(
+          headLine: 'Email',
+          erorr: "Email already used",
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ));
       loadingSignUp = false;
       setState(() {});
       return false;
@@ -369,20 +394,5 @@ class _CheckEmailState extends State<CheckEmail> {
         ],
       ),
     );
-  }
-}
-
-class CustSnackBar extends StatelessWidget {
-  const CustSnackBar({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SnackBar(
-        content: Stack(
-      clipBehavior: Clip.none,
-      children: [Text('Error')],
-    ));
   }
 }

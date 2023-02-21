@@ -63,7 +63,12 @@ class _TestCommentState extends State<TestComment> {
       child: Center(
         child: Column(
           children: [
-            ok ? AnimeVideoPlayer(url: play) : Container(),
+            ok
+                ? AnimeVideoPlayer(
+                    url: play,
+                    context: context,
+                  )
+                : Container(),
             Padding(
               padding: const EdgeInsets.all(20),
               child: GestureDetector(
