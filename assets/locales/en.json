@@ -46,6 +46,9 @@
     "info": "Info",
     "episodes": "Episodes",
     "trailer": "Trailer",
-    "view": "View"
+    "view": "View",
+    "minlength": "must be at least ",
+    "maxlength": "must be at last ",
+    "characters": "characters"
 
 }

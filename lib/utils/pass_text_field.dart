@@ -6,7 +6,8 @@ class PassTextFeild extends StatefulWidget {
   const PassTextFeild({
     Key? key,
     required this.passwordController,
-    required this.password, required this.valid,
+    required this.password,
+    required this.valid,
   }) : super(key: key);
 
   final TextEditingController passwordController;
@@ -48,8 +49,8 @@ class _PassTextFeildState extends State<PassTextFeild> {
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Column(
                     children: [
-                      TextFormField
-                      (validator: (value) => widget.valid(value),
+                      TextFormField(
+                        validator: (value) => widget.valid(value),
                         //maxLines: 5,
                         style: TextStyle(
                           color: primaryColor,

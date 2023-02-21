@@ -83,9 +83,11 @@ class _SignUpState extends State<SignUp> {
     if (body['status'] == 'true') {
       loading2 = false;
       setState(() {});
-      UserModel.setAcount(body['account']);
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setBool('logIn', true);
+      try {
+        UserModel.setAcount(body['account']);
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setBool('logIn', true);
+      } catch (e) {}
       Navigator.restorablePushReplacementNamed(context, '/Home');
     } else {
       loading2 = false;
@@ -118,9 +120,8 @@ class _SignUpState extends State<SignUp> {
     setState(() {});
     final response = await http.post(Uri.parse(checkEmail),
         body: {"email": email, 'username': username});
-        final body = json.decode(response.body);
+    final body = json.decode(response.body);
     try {
-      
       print(body);
       if (body['status'] == 'true') {
         loading = false;

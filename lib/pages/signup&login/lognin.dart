@@ -16,6 +16,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../server/urls_php.dart';
+import '../../widget/cust_snak_bar.dart';
+import '../../widget/cust_textfield.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -38,7 +40,7 @@ class _LoginState extends State<Login> {
   static GlobalKey<FormState> fromstate = GlobalKey();
 
   check() {
-    if (passwordController.text.isNotEmpty && userController.text.isNotEmpty) {
+    if (passwordController.text.length > 7 && userController.text.isNotEmpty) {
       setState(() {});
       return true;
     } else {
@@ -49,11 +51,11 @@ class _LoginState extends State<Login> {
 
   validInput(String text, String type, int min, int max) {
     if (text.isEmpty || text.length < min) {
-      return "$type must be at least 5 characters";
+      return "$type ${context.localeString('minlength')}$min ${context.localeString('characters')}";
       //"Please enter a valid $type";
       //'ادخل كلمة مرور لا تقل عن  4 حروف '
     } else if (text.length > max) {
-      "$type must be at last 20 characters";
+      "$type ${context.localeString('maxlength')}$max ${context.localeString('characters')}";
     }
     // if (text.length < min) {
     //   ;
@@ -138,9 +140,11 @@ class _LoginState extends State<Login> {
     if (body['status'] == 'true') {
       loading2 = false;
       setState(() {});
-      UserModel.setAcount(body['account']);
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setBool('logIn', true);
+      try {
+        UserModel.setAcount(body['account']);
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setBool('logIn', true);
+      } catch (e) {}
       Navigator.restorablePushReplacementNamed(context, '/Home');
     } else {
       loading2 = false;
@@ -151,14 +155,28 @@ class _LoginState extends State<Login> {
   }
 
   //late Account account;
-  getAccount(String email, String pass) async {
+  getAccount(String email, String pass, BuildContext context) async {
     if (fromstate.currentState!.validate()) {
       loading = true;
+      var response;
       setState(() {});
-      final response = await http
-          .post(Uri.parse(linkLogin), body: {"user": email, 'pass': pass});
-      final body = json.decode(response.body);
 
+      try {
+        response = await http
+            .post(Uri.parse(linkLogin), body: {"user": email, 'pass': pass});
+      } catch (e) {
+        loading = false;
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              CustSnackBar(headLine: 'Connection', erorr: "Connection Erorr"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ));
+      }
+      final body = json.decode(response.body);
+      print("body :" + body.toString());
       if (body['OK'] == 'OK') {
         loading = false;
         print(body);
@@ -173,10 +191,23 @@ class _LoginState extends State<Login> {
       } else if (body['OK'] == 'Account') {
         loading = false;
         setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: CustSnackBar(headLine: 'Account', erorr: "Account"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ));
         return null;
       } else if (body['OK'] == 'Password') {
         loading = false;
         setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: CustSnackBar(headLine: 'Password', erorr: "Password"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ));
+
         return false;
       } else {
         loading = false;
@@ -225,154 +256,169 @@ class _LoginState extends State<Login> {
       body: Form(
         autovalidateMode: AutovalidateMode.onUserInteraction,
         key: fromstate,
-        child: ListView(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 110,
-                    ),
-                    Container(
-                        child: LocaleText(
-                      "welcome",
-                      style: TextStyle(
-                          fontSize: 25,
-                          fontFamily: context.currentLocale.toString() == 'ar'
-                              ? 'SFPro'
-                              : 'Angie',
-                          fontWeight: FontWeight.w500),
-                    )),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                        child: LocaleText(
-                      "welcome2",
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontFamily: context.currentLocale.toString() == 'ar'
-                              ? 'SFPro'
-                              : 'Angie',
-                          fontWeight: FontWeight.w200),
-                    )),
-                  ],
-                ),
-              ),
-            ),
-            CustTextField(
-                withValid: false,
-                valid: (val) {
-                  return validInput(
-                      val!, context.localeString('useremail'), 5, 10);
-                },
-                controller: userController,
-                text: context.localeString('useremail')),
-            PassTextFeild(
-                valid: (val) {
-                  return validInput(
-                      val!, context.localeString('password'), 4, 25);
-                },
-                passwordController: passwordController,
-                password: context.localeString('password')),
-            GestureDetector(
-              onTap: (() async {
-                var check2 = (loading == false && check() == true)
-                    ? await getAccount(
-                        userController.text, passwordController.text)
-                    : '';
-                if (check2 == true) {
-                  print("True");
-
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/Home', (route) => false);
-                } else if (check2 == false) {
-                  print("False");
-                } else {
-                  print("Null");
-                }
-              }),
-              child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  child: Container(
-                    height: 48,
+        child: SingleChildScrollView(
+          child: Container(
+            child: Container(
+              height: size.height,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                        color: check() != true ? bottomUp : bottomDown,
-                        borderRadius: BorderRadius.circular(15)),
-                    child: Center(
-                      child: loading == false
-                          ? LocaleText(
-                              "logIn",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontFamily:
-                                      context.currentLocale.toString() == 'ar'
-                                          ? 'SFPro'
-                                          : 'Angie',
-                                  fontWeight: FontWeight.bold),
-                            )
-                          : Container(
-                              height: 35,
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
+                            height: 110,
+                          ),
+                          Container(
+                              child: LocaleText(
+                            "welcome",
+                            style: TextStyle(
+                                fontSize: 25,
+                                fontFamily:
+                                    context.currentLocale.toString() == 'ar'
+                                        ? 'SFPro'
+                                        : 'Angie',
+                                fontWeight: FontWeight.w500),
+                          )),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                              child: LocaleText(
+                            "welcome2",
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontFamily:
+                                    context.currentLocale.toString() == 'ar'
+                                        ? 'SFPro'
+                                        : 'Angie',
+                                fontWeight: FontWeight.w200),
+                          )),
+                        ],
+                      ),
                     ),
-                  )),
-            ),
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      LoginWithGoogle();
-                    },
-                    child: Container(
-                      child: loading2
-                          ? SizedBox(
-                              height: 50,
-                              width: 50,
-                              child: CircularProgressIndicator(),
-                            )
-                          : LocaleText("logingoogle"),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Container(
-                child: GestureDetector(
-              // onTap: () => Navigator.pushReplacementNamed(
-              //     context, 'SignUp'),
+                  ),
+                  Column(
+                    children: [
+                      CustTextField2(
+                          controller: userController,
+                          text: context.localeString('useremail')),
+                      PassTextFeild(
+                          valid: (val) {
+                            return validInput(
+                                val!, context.localeString('password'), 8, 20);
+                          },
+                          passwordController: passwordController,
+                          password: context.localeString('password')),
+                      GestureDetector(
+                        onTap: (() async {
+                          var get = await (loading == false && check() == true)
+                              ? await getAccount(userController.text,
+                                  passwordController.text, context)
+                              : '';
+                          if (get == true) {
+                            print("True");
 
-              onTap: () =>
-                  Navigator.restorablePushReplacementNamed(context, '/SignUp'),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LocaleText("havenot"),
-                  LocaleText(
-                    "signup",
-                    style: TextStyle(
-                        fontSize: 15,
-                        color: bottomDown,
-                        fontFamily: context.currentLocale.toString() == 'ar'
-                            ? 'SFPro'
-                            : 'Angie',
-                        fontWeight: FontWeight.bold),
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, '/Home', (route) => false);
+                          } else {
+                            print("no");
+                          }
+                        }),
+                        child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 7),
+                            child: Container(
+                              height: 48,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                  color:
+                                      check() != true ? bottomUp : bottomDown,
+                                  borderRadius: BorderRadius.circular(15)),
+                              child: Center(
+                                child: loading == false
+                                    ? LocaleText(
+                                        "logIn",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontFamily: context.currentLocale
+                                                        .toString() ==
+                                                    'ar'
+                                                ? 'SFPro'
+                                                : 'Angie',
+                                            fontWeight: FontWeight.bold),
+                                      )
+                                    : Container(
+                                        height: 35,
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                              ),
+                            )),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            LoginWithGoogle();
+                          },
+                          child: Container(
+                            child: loading2
+                                ? SizedBox(
+                                    height: 50,
+                                    width: 50,
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : LocaleText("logingoogle"),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 40),
+                    child: Container(
+                        child: GestureDetector(
+                      // onTap: () => Navigator.pushReplacementNamed(
+                      //     context, 'SignUp'),
+
+                      onTap: () => Navigator.restorablePushReplacementNamed(
+                          context, '/SignUp'),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          LocaleText("havenot"),
+                          LocaleText(
+                            "signup",
+                            style: TextStyle(
+                                fontSize: 15,
+                                color: bottomDown,
+                                fontFamily:
+                                    context.currentLocale.toString() == 'ar'
+                                        ? 'SFPro'
+                                        : 'Angie',
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    )),
                   ),
                 ],
               ),
-            )),
-          ],
+            ),
+          ),
         ),
       ),
     );

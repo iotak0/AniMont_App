@@ -66,7 +66,7 @@ class _AnimePlayerState extends State<AnimePlayer> {
   late List allEPImage;
   late String animeName;
   late List allEPUrl;
-  late int allEPCount;
+  int allEPCount = 0;
   late List<Download> downloadList;
   late int eNP = 0;
   bool webPlayer = false;
@@ -676,14 +676,12 @@ class _AnimePlayerState extends State<AnimePlayer> {
         return allowBack != false ? false : true;
       },
       child: Scaffold(
-          body: ifram.isNotEmpty || ok
+          body: (ifram.isNotEmpty || ok)
               ? ListView(controller: listController2, children: [
                   //AnimeVideoPlayer(size: size, chewieController: _chewieController),
                   Container(
-                      height: isFullScrean == true
-                          ? size.height
-                          : size.height / 2.65,
-                      width: isFullScrean == true ? size.width : size.width,
+                      height: isFullScrean == true ? size.height : 280,
+                      width: size.width,
                       decoration: const BoxDecoration(
                         borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(25),
@@ -702,11 +700,14 @@ class _AnimePlayerState extends State<AnimePlayer> {
                           Stack(
                             children: [
                               ok
-                                  ? AnimeVideoPlayer(url: play)
+                                  ? AnimeVideoPlayer(
+                                      url: play,
+                                      context: context,
+                                    )
                                   : Container(
                                       height: isFullScrean == true
                                           ? size.height
-                                          : size.height / 3,
+                                          : 240,
                                       width: isFullScrean == true
                                           ? size.width
                                           : size.width,
@@ -1247,8 +1248,15 @@ class _AnimePlayerState extends State<AnimePlayer> {
                                               ),
                                             )),
                                         GestureDetector(
-                                          onTap: () {
+                                          onTap: () async {
                                             if (ok != false) {
+                                              // AnimeVideoPlayerState
+                                              //         .videoPlayerController =await
+                                              //     VideoPlayerController.network(
+                                              //         play.replaceAll(
+                                              //             '240', '360p_1'));
+
+                                              //.replaceAll('240p', '${widget.quality}p_1')
                                               showModalBottomSheet<dynamic>(
                                                   backgroundColor:
                                                       Colors.transparent,
