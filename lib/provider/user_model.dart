@@ -1,54 +1,49 @@
 import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
+import 'package:anime_mont_test/Screens/Anime/all_anime.dart';
+import 'package:anime_mont_test/server/urls_php.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserModel {
-  final String userName;
-  final String name;
-  final String bio;
-  final String email;
-  final String country;
-  final String birthday;
-  final String avatar;
-  final String backGroung;
-  final String id;
-  final String followers;
-  final String following;
-  final bool admin;
+  String userName;
+  String name;
+  String bio;
+  String email;
+  String country;
+  String birthday;
+  String avatar;
+  String backGroung;
+  String id;
+  String followers;
+  String following;
+  bool imfollowing = false;
+  bool isfollowing = false;
+  bool admin;
+  List<Matual> matual;
 
   UserModel(
-    this.userName,
-    this.name,
-    this.bio,
-    this.avatar,
-    this.email,
-    this.country,
-    this.birthday,
-    this.backGroung,
-    this.id,
-    this.followers,
-    this.following,
-    this.admin,
-    //upload/image.png
-  );
+      this.userName,
+      this.name,
+      this.bio,
+      this.avatar,
+      this.email,
+      this.country,
+      this.birthday,
+      this.backGroung,
+      this.id,
+      this.followers,
+      this.following,
+      this.imfollowing,
+      this.isfollowing,
+      this.admin,
+      this.matual
 
-  static validInput(String text, String type, int min, int max) {
-    if (text.isNotEmpty) {
-      return "Please enter a valid $type";
-      //'ادخل كلمة مرور لا تقل عن  4 حروف '
-    }
-    if (text.length < min) {
-      "$type must be at least 6 characters";
-    }
-    if (text.length > max) {
-      "$type must be at last 20 characters";
-    } else {
-      return "Please enter a valid $type";
-    }
-  }
+      //upload/image.png
+      );
 
   static UserModel fromJson(json) => UserModel(
         json['username'] ?? '',
@@ -56,13 +51,18 @@ class UserModel {
         json['bio'] ?? '',
         json['avatar'] ?? '',
         json['email'] ?? '',
-        json['country'] ?? '',
+        json['city'] ?? '',
         json['birthday'] ?? '',
         json['background_image'] ?? '',
         json['id'].toString(),
-        json['followers'].toString(),
-        json['followings'].toString(),
-        json['admin'] == 0 ? false : true,
+        json['followers'] ?? "0",
+        json['followings'] ?? "0",
+        json['imfollowing'] == 0 ? false : true,
+        json['isfolowing'] == 0 ? false : true,
+        json['admin'] == '0' ? false : true,
+        json['mutual'] == null
+            ? []
+            : json['mutual'].map<Matual>(Matual.fromJson).toList(),
       );
 
   static getAcount() async {
@@ -70,9 +70,9 @@ class UserModel {
     String? userPref = prefs.getString('userData');
     Map<String, dynamic> user = jsonDecode(userPref!) as Map<String, dynamic>;
 
-    user.forEach((key, value) {
-      print('get account ${key}   +  ${value}');
-    });
+    // user.forEach((key, value) {
+    //   print('get account ${key}   +  ${value}');
+    // });
 
     return user;
   }
@@ -85,37 +85,133 @@ class UserModel {
     prefs.setBool('logIn', true);
   }
 
-  static logOut(context) async {
+  static Future beforeLogOut(context) async {
     GoogleSignIn google = await GoogleSignIn();
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.remove('userData');
-    print('logeOut ${prefs.getString('userData')}');
-    prefs.setBool('logIn', false);
-    prefs.setInt('index', 0);
-    Navigator.restorablePushReplacementNamed(context, '/LogIn');
+
     try {
+      UserModel user = await getAcount();
+      await FirebaseMessaging.instance.unsubscribeFromTopic('${user.id}');
+      prefs.remove('userData');
+      prefs.setBool('logIn', false);
+      prefs.setInt('index', 0);
+      prefs.clear();
+
       google.signOut();
-    } catch (e) {}
-    return prefs.getString('userData');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future logOut(context) async {
+    GoogleSignIn google = await GoogleSignIn();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool error = false;
+    try {
+      String? userPref = prefs.getString('userData');
+      final body = json.decode(userPref!);
+      UserProfial account = UserProfial.fromJson(body);
+      await http.get(Uri.parse("https://animont.net")).catchError((e) {
+        error = true;
+        return Response("fff0", 404);
+      }).then((value) async {
+        if (value.statusCode == 200) {
+          await FirebaseMessaging.instance
+              .unsubscribeFromTopic('${account.id}');
+          prefs.remove('userData');
+          prefs.setBool('logIn', false);
+          prefs.setInt('index', 0);
+          // prefs.clear();
+          await google.signOut().catchError((onError) {});
+        } else
+          error = true;
+      });
+
+      return !error;
+    } catch (e) {
+      return false;
+    }
+
+    //Restart.restartApp();
+    //return prefs.getStr
+    //ing('userData');
+  }
+
+  static Future unFollow(myId, userId) async {
+    var response = await http.post(Uri.parse(un_follow), body: {
+      "my_id": myId.toString(),
+      "f_id": userId.toString()
+    }).onError((error, stackTrace) {
+      return Response('body', 200);
+    });
+    final body = json.decode(response.body);
+    print("unFollow" + response.body);
+
+    if (body['status'] == 'success') {
+      return true;
+    } else {
+      return false;
+    }
+    print("Body $body");
+  }
+
+  static goTo(String headLine, String url, myId, context) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => AllAnime(
+                  myId: myId,
+                  headLine: headLine,
+                  genre: url,
+                )));
+  }
+
+  static Future follow(myId, userId) async {
+    var response = await http.post(Uri.parse(follow_url), body: {
+      "my_id": myId.toString(),
+      "f_id": userId.toString()
+    }).onError((error, stackTrace) {
+      return Response('body', 200);
+    });
+    final body = json.decode(response.body);
+    print("unFollow" + response.body);
+    if (body['status'] == 'success') {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 
-class UserProfial {
-  final String userName;
+class Users {
   final String name;
-  final String bio;
-  final String email;
-  final String country;
-  final String birthday;
+  final String username;
   final String avatar;
-  final String backGroung;
-  final String id;
-  final String followers;
-  final String following;
+  final int id;
+  final bool admin;
+
+  Users(this.name, this.username, this.avatar, this.id, this.admin);
+  static Users fromJson(json) => Users(json['id'], json['name'].toString(),
+      json['username'], json['avatar'], json['admin'] == '0' ? false : true);
+}
+
+class UserProfial {
+  String userName;
+  String name;
+  String bio;
+  String email;
+  String country;
+  String birthday;
+  String avatar;
+  String backGroung;
+  String id;
+  int followers;
+  int following;
   bool imfollowing = false;
   bool isfollowing = false;
-  final bool admin;
-  final List<Matual> matual;
+  bool admin;
+  List<Matual> matual;
 
   UserProfial(
       this.userName,
@@ -143,12 +239,12 @@ class UserProfial {
         json['bio'] ?? '',
         json['avatar'] ?? '',
         json['email'] ?? '',
-        json['country'] ?? '',
+        json['city'] ?? '',
         json['birthday'] ?? '',
         json['background_image'] ?? '',
         json['id'].toString(),
-        json['followers'].toString() ?? '0',
-        json['followings'].toString() ?? '0',
+        json['followers'] ?? 0,
+        json['followings'] ?? 0,
         json['imfollowing'] == 0 ? false : true,
         json['isfolowing'] == 0 ? false : true,
         json['admin'] == '0' ? false : true,
@@ -179,10 +275,10 @@ class UserProfial {
 }
 
 class Matual {
-  final String name;
-  final String username;
-  final String avatar;
-  final String id;
+  String name;
+  String username;
+  String avatar;
+  String id;
 
   Matual(this.name, this.username, this.avatar, this.id);
   static Matual fromJson(json) => Matual(
@@ -191,4 +287,18 @@ class Matual {
         json['avatar'],
         json['id'].toString(),
       );
+}
+
+class NextEP {
+  final String link;
+  final bool none;
+
+  NextEP(this.link, this.none);
+}
+
+class PrefEP {
+  final String link;
+  final bool none;
+
+  PrefEP(this.link, this.none);
 }
