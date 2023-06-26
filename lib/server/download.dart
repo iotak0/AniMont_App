@@ -18,7 +18,6 @@ class _DownloadState extends State<Download> {
     if (status.isGranted) {
       final baseStorage = await getExternalStorageDirectories();
       await FlutterDownloader.enqueue(
-    
         url: url,
         headers: {}, // optional: header send with url (auth token etc)
         savedDir: baseStorage![0].path,

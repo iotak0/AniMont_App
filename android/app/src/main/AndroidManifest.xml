@@ -2,16 +2,20 @@
 xmlns:tools="http://schemas.android.com/tools"
     package="com.example.anime_mont_test">
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
    <application
    
-        android:label="anime_mont_test"
+        android:label="AniMont - انيمونت"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">
+    <meta-data
+    android:name="com.google.firebase.messaging.default_notification_icon"
+    android:resource="@drawable/ic_notification" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -34,15 +38,7 @@ xmlns:tools="http://schemas.android.com/tools"
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Android ADM intent -->
-        <activity
-            android:name="com.dv.adm"
-            android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"></action>
-        </intent-filter>
-        </activity>
-        <!-- End OF ADM Intent -->
+       
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
@@ -94,6 +90,10 @@ xmlns:tools="http://schemas.android.com/tools"
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-8361517083614667~1901383806"/>
-        
+            
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="pushnotification"/>
+    
     </application>
 </manifest>
